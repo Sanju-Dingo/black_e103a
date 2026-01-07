@@ -1,73 +1,69 @@
-from langchain.chains.retrieval_qa.base import RetrievalQA
-from langchain_openai import ChatOpenAI
-from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import OpenAIEmbeddings
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from PyPDF2 import PdfReader
 
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores import FAISS
+from langchain_google_genai import (
+    GoogleGenerativeAIEmbeddings,
+    ChatGoogleGenerativeAI
+)
+from langchain.chains import RetrievalQA
 
 def process_pdf(uploaded_file, api_key):
     """
-    Reads PDF -> Splits -> Embeds with Gemini -> Saves to FAISS
+    Reads PDF -> Embeds with Gemini -> Saves to FAISS
     """
     if not uploaded_file:
         return None
-
-    # Read PDF
+    
+    # 1. Read PDF
     pdf_reader = PdfReader(uploaded_file)
     text = ""
     for page in pdf_reader.pages:
         text += page.extract_text() or ""
-
-    # Split text
+        
+    # 2. Split text
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
-        chunk_overlap=200
+        chunk_overlap=200,
+        length_function=len
     )
     chunks = text_splitter.split_text(text)
-
-    # Gemini Embeddings
+    
+    # 3. Embeddings
     embeddings = GoogleGenerativeAIEmbeddings(
-        model="models/embedding-001",
+        model="models/embedding-001", 
         google_api_key=api_key
     )
-
-    # Vector Store
-    vectorstore = FAISS.from_texts(chunks, embeddings)
-
+    
+    # 4. Vector Store
+    vectorstore = FAISS.from_texts(texts=chunks, embedding=embeddings)
+    
     return vectorstore
 
-
 def get_answer(vectorstore, question, complexity, api_key):
-    """
-    Uses RetrievalQA to answer questions from syllabus
-    """
-
-    # Persona based on difficulty
+    # 1. Define Persona
     if complexity == "Beginner":
-        style = "Explain simply like to a 10-year-old with examples."
+        style = "Explain this like I am 10 years old. Use simple analogies."
     elif complexity == "Intermediate":
-        style = "Explain clearly to a high school student."
-    else:
-        style = "Explain technically at university level."
+        style = "Explain this to a high school student. Be clear and factual."
+    else: 
+        style = "Explain this to a university professor. Use technical terms."
 
-    # Gemini Chat Model
+    # 2. Setup Google Model
     llm = ChatGoogleGenerativeAI(
         model="gemini-1.5-flash",
         google_api_key=api_key,
         temperature=0.3
     )
-
+    
+    # 3. Run Chain
     qa_chain = RetrievalQA.from_chain_type(
         llm=llm,
         chain_type="stuff",
-        retriever=vectorstore.as_retriever()
+        retriever=vectorstore.as_retriever(),
     )
-
-    full_query = f"""
-    Instruction: {style}
-
-    Question: {question}
-    """
-
+    
+    full_query = f"Style: {style} \n Question: {question}"
     response = qa_chain.invoke(full_query)
-    return response["result"]
+    
+    return response['result']
