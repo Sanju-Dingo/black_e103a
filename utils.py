@@ -24,14 +24,14 @@ def process_pdf(uploaded_file, api_key):
 
     # Split text
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,
-        chunk_overlap=200
+        chunk_size=2000,
+        chunk_overlap=100
     )
     chunks = splitter.split_text(text)
 
-    # LOCAL embeddings (no API quota issues)
+    # Local embeddings (NO Gemini quota issues)
     embeddings = HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2"
+        model_name="sentence-transformers/paraphrase-MiniLM-L3-v2"
     )
 
     # Vector store
@@ -48,6 +48,8 @@ def get_answer(vectorstore, question, complexity, api_key):
     """
     Uses Gemini + RetrievalQA to answer questions
     """
+
+    # Persona control
     if complexity == "Beginner":
         style = "Explain simply like to a 10-year-old with examples."
     elif complexity == "Intermediate":
@@ -55,11 +57,14 @@ def get_answer(vectorstore, question, complexity, api_key):
     else:
         style = "Explain technically at university level."
 
+    # Gemini Chat Model (STABLE + COMPATIBLE)
     llm = ChatGoogleGenerativeAI(
-        model="gemini-1.5-flash",
-        google_api_key=api_key,
-        temperature=0.3
-    )
+    model="models/gemini-pro",
+    google_api_key=api_key,
+    temperature=0.3,
+    convert_system_message_to_human=True
+)
+
 
     qa_chain = RetrievalQA.from_chain_type(
         llm=llm,
@@ -70,4 +75,5 @@ def get_answer(vectorstore, question, complexity, api_key):
     response = qa_chain.invoke(
         f"Instruction: {style}\nQuestion: {question}"
     )
+
     return response["result"]
