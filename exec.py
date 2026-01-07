@@ -4,7 +4,7 @@ from utils import process_pdf, get_answer
 # --- CONFIG ---
 st.set_page_config(page_title="Tangerine AI", layout="wide")
 
-# --- SESSION STATE ---
+# --- SESSION STATE DEFAULTS ---
 defaults = {
     "logged_in": False,
     "role": None,
@@ -17,7 +17,7 @@ for key, value in defaults.items():
     if key not in st.session_state:
         st.session_state[key] = value
 
-# --- USERS (Demo Only) ---
+# --- USERS (DEMO ONLY) ---
 USERS = {
     "teacher": "admin123",
     "student": "learn123"
@@ -55,7 +55,7 @@ def teacher_dashboard():
     st.title("👨‍🏫 Teacher Dashboard")
     st.markdown("---")
 
-    # API KEY (SAFE)
+    # API KEY
     if not st.session_state.api_key:
         try:
             st.session_state.api_key = st.secrets["GOOGLE_API_KEY"]
@@ -81,20 +81,21 @@ def teacher_dashboard():
             "Upload PDF", type="pdf"
         )
 
-        if uploaded_file and st.button(
-            "Process PDF",
-            disabled=st.session_state.vectorstore is not None
-        ):
-            with st.spinner("Processing syllabus..."):
-                st.session_state.vectorstore = process_pdf(
-                    uploaded_file,
-                    st.session_state.api_key
-                )
-            st.success("Knowledge Base Created!")
+        if uploaded_file and st.button("Process PDF"):
+            if st.session_state.vectorstore is None:
+                with st.spinner("Processing syllabus..."):
+                    st.session_state.vectorstore = process_pdf(
+                        uploaded_file,
+                        st.session_state.api_key
+                    )
+                st.success("Knowledge Base Created!")
+            else:
+                st.info("Syllabus already processed.")
 
     st.markdown("---")
     if st.button("Logout"):
-        st.session_state.clear()
+        st.session_state.logged_in = False
+        st.session_state.role = None
         st.rerun()
 
 # --- STUDENT DASHBOARD ---
@@ -104,7 +105,8 @@ def student_dashboard():
     if not st.session_state.vectorstore:
         st.warning("No syllabus uploaded yet.")
         if st.button("Logout"):
-            st.session_state.clear()
+            st.session_state.logged_in = False
+            st.session_state.role = None
             st.rerun()
         return
 
@@ -120,7 +122,8 @@ def student_dashboard():
             st.rerun()
 
         if st.button("Logout"):
-            st.session_state.clear()
+            st.session_state.logged_in = False
+            st.session_state.role = None
             st.rerun()
 
     # Chat History
