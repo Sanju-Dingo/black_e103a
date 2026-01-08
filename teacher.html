@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Portal - Learning AI System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Teacher Portal</h1>
+            <p>Manage curriculum and generate educational content</p>
+            <button onclick="window.location.href='index.html'" class="btn btn-secondary">← Back to Home</button>
+        </header>
+        
+        <main class="landing">
+            <div class="curriculum-form">
+                <h2>Curriculum Setup</h2>
+                <form id="curriculumForm">
+                    <div class="form-group">
+                        <label for="subject">Subject</label>
+                        <select id="subject" required>
+                            <option value="">Select Subject</option>
+                            <option value="mathematics">Mathematics</option>
+                            <option value="science">Science</option>
+                            <option value="english">English</option>
+                            <option value="history">History</option>
+                            <option value="geography">Geography</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="grade">Grade Level</label>
+                        <select id="grade" required>
+                            <option value="">Select Grade</option>
+                            <option value="elementary">Elementary (K-5)</option>
+                            <option value="middle">Middle School (6-8)</option>
+                            <option value="high">High School (9-12)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="standards">Learning Standards</label>
+                        <textarea id="standards" placeholder="Enter curriculum standards and learning objectives..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Save Curriculum Settings</button>
+                </form>
+            </div>
+            
+            <div class="upload-section">
+                <h2>Upload Teaching Materials</h2>
+                <div class="upload-area" id="teacherUpload">
+                    <div class="upload-icon">📁</div>
+                    <p>Drag and drop files here or click to browse</p>
+                    <p class="upload-hint">Supported formats: PDF, DOC, PPT, TXT (up to 50MB)</p>
+                    <input type="file" id="teacherFileInput" multiple accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" style="display: none;">
+                </div>
+                
+                <div id="uploadedFiles" class="uploaded-files"></div>
+            </div>
+            
+            <div class="content-generation">
+                <h2>Generate Content</h2>
+                <div class="form-group">
+                    <label for="topic">Topic</label>
+                    <input type="text" id="topic" placeholder="Enter topic to generate content for...">
+                </div>
+                
+                <div class="form-group">
+                    <label for="contentType">Content Type</label>
+                    <select id="contentType">
+                        <option value="explanation">Concept Explanation</option>
+                        <option value="quiz">Quiz</option>
+                    </select>
+                </div>
+                
+                <button onclick="generateTeacherContent()" class="btn btn-primary">Generate Content</button>
+                
+                <div class="loading" id="teacherLoading">
+                    <div class="spinner"></div>
+                    <p>Generating curriculum-aligned content...</p>
+                </div>
+                
+                <div id="teacherOutput" class="content-output"></div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="ai-service.js"></script>
+    <script src="teacher.js"></script>
+</body>
+</html>

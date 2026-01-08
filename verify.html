@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification - Learning AI System</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .verification-container {
+            max-width: 500px;
+            margin: 100px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .success-icon {
+            font-size: 64px;
+            color: #4caf50;
+            margin-bottom: 20px;
+        }
+        .error-icon {
+            font-size: 64px;
+            color: #f44336;
+            margin-bottom: 20px;
+        }
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="verification-container">
+        <div id="verification-content">
+            <div class="loading">
+                <div class="spinner"></div>
+                <h2>Verifying your email...</h2>
+                <p>Please wait while we verify your account.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="mysql-db.js"></script>
+    <script>
+        class EmailVerification {
+            constructor() {
+                this.db = new MySQLDB();
+                this.verifyEmail();
+            }
+
+            async verifyEmail() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const token = urlParams.get('token');
+                const email = urlParams.get('email');
+
+                if (!token || !email) {
+                    this.showError('Invalid verification link');
+                    return;
+                }
+
+                try {
+                    const success = await this.processVerification(email, token);
+                    if (success) {
+                        this.showSuccess(email);
+                    } else {
+                        this.showError('Invalid or expired verification token');
+                    }
+                } catch (error) {
+                    this.showError('Verification failed: ' + error.message);
+                }
+            }
+
+            async processVerification(email, token) {
+                try {
+                    const response = await fetch('./api.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            action: 'VERIFY',
+                            data: {
+                                email: email,
+                                token: token
+                            }
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    return result.success;
+                } catch (error) {
+                    console.error('Verification error:', error);
+                    return false;
+                }
+            }
+
+            showSuccess(email) {
+                const role = email.endsWith('.skcet@gmail.com') ? 'teacher' : 'student';
+                document.getElementById('verification-content').innerHTML = `
+                    <div class="success-icon">✅</div>
+                    <h2>Email Verified Successfully!</h2>
+                    <p>Your account has been verified as a <strong>${role}</strong>.</p>
+                    <p>You can now sign in to access your dashboard.</p>
+                    <a href="login.html" class="btn">Go to Login</a>
+                `;
+            }
+
+            showError(message) {
+                document.getElementById('verification-content').innerHTML = `
+                    <div class="error-icon">❌</div>
+                    <h2>Verification Failed</h2>
+                    <p>${message}</p>
+                    <a href="login.html" class="btn">Back to Login</a>
+                `;
+            }
+        }
+
+        // Initialize verification
+        document.addEventListener('DOMContentLoaded', () => {
+            new EmailVerification();
+        });
+    </script>
+</body>
+</html>
