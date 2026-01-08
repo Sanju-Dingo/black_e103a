@@ -1,8 +1,0 @@
-; Add these lines to php.ini file (XAMPP/php/php.ini)
-
-[mail function]
-SMTP = smtp.gmail.com
-smtp_port = 587
-sendmail_from = your-email@gmail.com
-auth_username = your-email@gmail.com
-auth_password = your-app-password
